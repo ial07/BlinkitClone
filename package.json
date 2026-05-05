@@ -1,0 +1,25 @@
+{
+  "name": "blinkit-clone",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "clean": "turbo clean",
+    "kill-ports": "lsof -ti :3000 -ti :3001 | xargs kill -9 2>/dev/null; echo 'Ports 3000 & 3001 cleared'"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "packageManager": "npm@10.8.2"
+}

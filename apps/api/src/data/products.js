@@ -1,0 +1,126 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.products = void 0;
+exports.products = [
+    {
+        id: 'p001',
+        name: 'Tea Powder',
+        price: 120,
+        image_url: '/products/tea-powder.webp',
+    },
+    { id: 'p002', name: 'Sugar', price: 45, image_url: '/products/sugar.webp' },
+    { id: 'p003', name: 'Milk', price: 30, image_url: '/products/milk.webp' },
+    {
+        id: 'p004',
+        name: 'Coffee',
+        price: 250,
+        image_url: '/products/coffee.webp',
+    },
+    {
+        id: 'p005',
+        name: 'Biscuits',
+        price: 35,
+        image_url: '/products/biscuits.webp',
+    },
+    { id: 'p006', name: 'Bread', price: 40, image_url: '/products/bread.webp' },
+    { id: 'p007', name: 'Butter', price: 60, image_url: '/products/butter.webp' },
+    { id: 'p008', name: 'Jam', price: 95, image_url: '/products/jam.webp' },
+    { id: 'p009', name: 'Eggs', price: 89, image_url: '/products/eggs.webp' },
+    { id: 'p010', name: 'Rice', price: 180, image_url: '/products/rice.webp' },
+    { id: 'p011', name: 'Dal', price: 140, image_url: '/products/dal.webp' },
+    {
+        id: 'p012',
+        name: 'Cooking Oil',
+        price: 220,
+        image_url: '/products/cooking-oil.webp',
+    },
+    { id: 'p013', name: 'Onions', price: 35, image_url: '/products/onions.webp' },
+    {
+        id: 'p014',
+        name: 'Potatoes',
+        price: 30,
+        image_url: '/products/potatoes.webp',
+    },
+    {
+        id: 'p015',
+        name: 'Maggi Noodles',
+        price: 14,
+        image_url: '/products/maggi.webp',
+    },
+    {
+        id: 'p016',
+        name: 'Ketchup',
+        price: 80,
+        image_url: '/products/ketchup.webp',
+    },
+    {
+        id: 'p017',
+        name: 'Cheese',
+        price: 120,
+        image_url: '/products/cheese.webp',
+    },
+    { id: 'p018', name: 'Cream', price: 55, image_url: '/products/cream.webp' },
+    { id: 'p019', name: 'Salt', price: 20, image_url: '/products/salt.webp' },
+    {
+        id: 'p020',
+        name: 'Cooking Soda',
+        price: 15,
+        image_url: '/products/cooking-soda.webp',
+    },
+    {
+        id: 'p021',
+        name: 'Turmeric Powder',
+        price: 65,
+        image_url: '/products/turmeric.webp',
+    },
+    {
+        id: 'p022',
+        name: 'Chili Powder',
+        price: 70,
+        image_url: '/products/chili-powder.webp',
+    },
+    {
+        id: 'p023',
+        name: 'Coriander Powder',
+        price: 60,
+        image_url: '/products/coriander.webp',
+    },
+    {
+        id: 'p024',
+        name: 'Cumin Seeds',
+        price: 85,
+        image_url: '/products/cumin.webp',
+    },
+    {
+        id: 'p025',
+        name: 'Mixed Fruit Jam',
+        price: 110,
+        image_url: '/products/mixed-fruit-jam.webp',
+    },
+    {
+        id: 'p026',
+        name: 'Peanut Butter',
+        price: 175,
+        image_url: '/products/peanut-butter.webp',
+    },
+    { id: 'p027', name: 'Honey', price: 200, image_url: '/products/honey.webp' },
+    {
+        id: 'p028',
+        name: 'Coconut Oil',
+        price: 190,
+        image_url: '/products/coconut-oil.webp',
+    },
+    {
+        id: 'p029',
+        name: 'Green Tea',
+        price: 150,
+        image_url: '/products/green-tea.webp',
+    },
+    {
+        id: 'p030',
+        name: 'Corn Flakes',
+        price: 180,
+        image_url: '/products/corn-flakes.webp',
+    },
+];
+//# sourceMappingURL=products.js.map

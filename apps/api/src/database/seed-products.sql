@@ -1,0 +1,35 @@
+-- Seed: products
+
+TRUNCATE TABLE products CASCADE;
+
+INSERT INTO products (name, price, image_url) VALUES
+  ('Tea Powder', 120, '/products/tea-powder.webp'),
+  ('Sugar', 45, '/products/sugar.webp'),
+  ('Milk', 30, '/products/milk.webp'),
+  ('Coffee', 250, '/products/coffee.webp'),
+  ('Biscuits', 35, '/products/biscuits.webp'),
+  ('Bread', 40, '/products/bread.webp'),
+  ('Butter', 60, '/products/butter.webp'),
+  ('Jam', 95, '/products/jam.webp'),
+  ('Eggs', 89, '/products/eggs.webp'),
+  ('Rice', 180, '/products/rice.webp'),
+  ('Dal', 140, '/products/dal.webp'),
+  ('Cooking Oil', 220, '/products/cooking-oil.webp'),
+  ('Onions', 35, '/products/onions.webp'),
+  ('Potatoes', 30, '/products/potatoes.webp'),
+  ('Maggi Noodles', 14, '/products/maggi.webp'),
+  ('Ketchup', 80, '/products/ketchup.webp'),
+  ('Cheese', 120, '/products/cheese.webp'),
+  ('Cream', 55, '/products/cream.webp'),
+  ('Salt', 20, '/products/salt.webp'),
+  ('Cooking Soda', 15, '/products/cooking-soda.webp'),
+  ('Turmeric Powder', 65, '/products/turmeric.webp'),
+  ('Chili Powder', 70, '/products/chili-powder.webp'),
+  ('Coriander Powder', 60, '/products/coriander.webp'),
+  ('Cumin Seeds', 85, '/products/cumin.webp'),
+  ('Mixed Fruit Jam', 110, '/products/mixed-fruit-jam.webp'),
+  ('Peanut Butter', 175, '/products/peanut-butter.webp'),
+  ('Honey', 200, '/products/honey.webp'),
+  ('Coconut Oil', 190, '/products/coconut-oil.webp'),
+  ('Green Tea', 150, '/products/green-tea.webp'),
+  ('Corn Flakes', 180, '/products/corn-flakes.webp');
