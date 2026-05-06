@@ -212,7 +212,7 @@ Layer 3: Supabase query (fallback only on cache miss)
 ### Prerequisites
 - Node.js ≥ 20
 - npm ≥ 10
-- A Supabase project (or skip — the app falls back to local data)
+- A Supabase project (or skip — the app falls back to local seed data)
 
 ### 1. Clone the repository
 
@@ -231,15 +231,17 @@ npm install
 
 ```bash
 cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env.local
 ```
 
 Edit `apps/api/.env`:
 ```env
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_KEY=your-service-role-key
+PORT=3001
 ```
 
-> If you skip this step, the app runs fully on local seed data — no Supabase required.
+> If you skip Supabase config, the app runs fully on local seed data — no account required.
 
 ### 4. (Optional) Seed the database
 
@@ -255,8 +257,6 @@ apps/api/src/database/seed-orders.sql
 npm run dev
 ```
 
-This starts all packages in parallel via Turborepo:
-
 | Service | URL |
 |---|---|
 | Frontend (Next.js) | http://localhost:3000 |
@@ -268,6 +268,129 @@ This starts all packages in parallel via Turborepo:
 npm run kill-ports
 npm run dev
 ```
+
+---
+
+## Docker Setup
+
+### Local — run both services with Docker Compose
+
+```bash
+# 1. Copy and configure env files
+cp apps/api/.env.example apps/api/.env
+# Edit apps/api/.env with your Supabase credentials
+
+# 2. Build and start both containers
+docker-compose up --build
+
+# 3. Access the services
+# → Web:  http://localhost:3000
+# → API:  http://localhost:3001
+# → Health: http://localhost:3001/health
+```
+
+> **Note:** The first build takes 2–4 minutes (installs deps, compiles TS, builds Next.js).
+> Subsequent builds use Docker layer cache and are significantly faster.
+
+To stop:
+```bash
+docker-compose down
+```
+
+---
+
+## Sumopod Deployment Guide
+
+Sumopod runs each container as an independent service. Deploy the API and Web as two separate containers.
+
+### Architecture on Sumopod
+
+```
+Internet
+  │
+  ├─► [web-service]  (port 3000) ─── NEXT_PUBLIC_API_URL ──► [api-service] (port 3001)
+  │        Next.js                                                   NestJS
+  │
+  └─► [api-service]  (port 3001) ─── SUPABASE_SERVICE_KEY ──► Supabase (external)
+```
+
+---
+
+### Step 1 — Deploy the API Service
+
+**Build context:** monorepo root  
+**Dockerfile:** `apps/api/Dockerfile`  
+**Port:** `3001`
+
+**Environment variables to set in Sumopod dashboard:**
+
+| Variable | Value |
+|---|---|
+| `NODE_ENV` | `production` |
+| `PORT` | `3001` |
+| `SUPABASE_URL` | `https://your-project.supabase.co` |
+| `SUPABASE_SERVICE_KEY` | `your-service-role-key` |
+
+After deploying, note your API's public URL (e.g. `https://api.yourdomain.sumopod.com`).  
+Verify it is live: `GET https://api.yourdomain.sumopod.com/health` → `{"status":"ok"}`
+
+---
+
+### Step 2 — Deploy the Web Service
+
+**Build context:** monorepo root  
+**Dockerfile:** `apps/web/Dockerfile`  
+**Port:** `3000`
+
+> **Critical:** `NEXT_PUBLIC_API_URL` is baked into the JavaScript bundle at **build time**, not runtime.  
+> You must pass it as a **build argument** — not just an environment variable.
+
+In Sumopod, set the **build argument**:
+
+| Build Arg | Value |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | `https://api.yourdomain.sumopod.com` |
+
+**Runtime environment variables:**
+
+| Variable | Value |
+|---|---|
+| `NODE_ENV` | `production` |
+| `PORT` | `3000` |
+| `HOSTNAME` | `0.0.0.0` |
+
+---
+
+### Step 3 — Verify deployment
+
+```bash
+# API health check
+curl https://api.yourdomain.sumopod.com/health
+# → {"status":"ok","timestamp":"..."}
+
+# Products endpoint
+curl https://api.yourdomain.sumopod.com/products
+# → [{"id":"p001","name":"Tea Powder",...}]
+
+# Recommendation
+curl "https://api.yourdomain.sumopod.com/recommendations?item=Tea+Powder"
+# → {"item":"Tea Powder","recommendations":[...]}
+
+# Frontend
+open https://web.yourdomain.sumopod.com
+```
+
+---
+
+### Sumopod Deployment — Key Rules
+
+| Rule | Reason |
+|---|---|
+| Do NOT use `docker-compose` on Sumopod | Compose is for local only; Sumopod manages each service independently |
+| Pass `NEXT_PUBLIC_API_URL` as a build ARG | It is embedded in JS at build time — runtime env vars cannot override it |
+| Set `HOSTNAME=0.0.0.0` on web service | Without it, Next.js binds to `127.0.0.1` and is unreachable from outside the container |
+| Deploy API first | Web service needs the API URL before its image is built |
+| `SUPABASE_SERVICE_KEY` goes on API only | Never expose service keys in the frontend container |
 
 ---
 

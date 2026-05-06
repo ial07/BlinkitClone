@@ -1,0 +1,47 @@
+# ──────────────────────────────────────────────────────────────
+# docker-compose.yml — VPS PRODUCTION DEPLOYMENT
+# ──────────────────────────────────────────────────────────────
+
+services:
+  # ── NestJS Backend ──────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: blinkit-api
+    ports:
+      - '3001:3001'
+    # Gunakan environment langsung untuk production di VPS
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:3001/health']
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: always
+
+  # ── Next.js Frontend ────────────────────────────────────────
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        # GANTI http://<IP_VPS_LU>:3001 atau domain backend lu
+        # Penting: Next.js butuh URL ini pas proses BUILD
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    container_name: blinkit-web
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: always

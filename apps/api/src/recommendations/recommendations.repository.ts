@@ -6,6 +6,10 @@ import { OrdersRepository } from '../orders/orders.repository';
 export class RecommendationsRepository {
   constructor(private readonly ordersRepository: OrdersRepository) {}
 
+  async getAllOrders(): Promise<Order[]> {
+    return this.ordersRepository.findAll();
+  }
+
   async getOrdersContaining(itemName: string): Promise<Order[]> {
     return this.ordersRepository.findByItem(itemName);
   }

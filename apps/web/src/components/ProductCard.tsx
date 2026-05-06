@@ -62,6 +62,8 @@ export function ProductCard({ product, onAdd }: ProductCardProps) {
           <img
             src={product.image_url}
             alt={product.name}
+            loading="lazy"
+            decoding="async"
             className="relative z-10 h-full w-full object-contain p-3 transition-transform duration-300 group-hover:scale-105"
             onError={() => setImgFailed(true)}
           />

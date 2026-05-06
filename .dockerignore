@@ -1,0 +1,42 @@
+# Files and directories to exclude from Docker build context.
+# A smaller build context = faster uploads to the Docker daemon.
+
+# ── Dependencies (always reinstalled inside Docker) ───────────
+node_modules
+**/node_modules
+
+# ── Build outputs ─────────────────────────────────────────────
+dist
+**/dist
+.next
+**/.next
+coverage
+**/coverage
+
+# ── Environment secrets — NEVER bake into an image ────────────
+.env
+.env.local
+.env.*.local
+apps/api/.env
+apps/web/.env
+apps/web/.env.local
+
+# ── Version control ───────────────────────────────────────────
+.git
+.gitignore
+
+# ── Logs and OS noise ─────────────────────────────────────────
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# ── Editor configs ────────────────────────────────────────────
+.vscode
+.idea
+*.swp
+*.swo
+
+# ── Test outputs ─────────────────────────────────────────────
+apps/api/coverage
+apps/web/coverage

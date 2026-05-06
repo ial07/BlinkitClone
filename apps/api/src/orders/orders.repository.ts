@@ -20,6 +20,13 @@ export class OrdersRepository {
         return this.fallbackFindAll();
       }
 
+      if (data && data.length >= 10000) {
+        console.warn(
+          '⚠️  Orders query returned 10,000 rows (limit hit). ' +
+          'Co-occurrence matrix may be incomplete. Consider pagination or a materialized view.',
+        );
+      }
+
       return (data || []) as Order[];
     }
 
