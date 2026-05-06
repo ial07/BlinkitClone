@@ -1,502 +1,339 @@
 # BlinkitClone — Frequently Bought Together Recommendation Engine
 
-> A quick commerce MVP demonstrating a **Market Basket Analysis** recommendation system, built with a production-grade monorepo architecture using Next.js, NestJS, and Supabase.
+A quick commerce MVP demonstrating a Market Basket Analysis recommendation system, built with a production-grade monorepo architecture using Next.js, NestJS, and Supabase.
 
 ---
 
 ## Overview
 
-Quick commerce platforms live and die by basket size. Getting a user to add one more item per order — consistently — is the difference between breakeven and profitability at scale.
+Quick commerce platforms depend on basket size. Increasing average order value by even one item per transaction has direct impact on profitability.
 
-This project implements the **Frequently Bought Together** feature: when a user adds a product to their cart, the system immediately surfaces the top 3 items most commonly purchased alongside it, derived from analysis of 1,000 seeded orders using **Market Basket Analysis (MBA)**.
+This project implements a Frequently Bought Together system. When a user adds a product, the system returns the top 3 items most frequently purchased alongside it, derived from 1,000 seeded orders.
 
-The goal was not to build a toy demo. It was to design a system where:
-- The recommendation logic is isolated, testable, and replaceable
-- The data layer is database-backed with a clean fallback strategy
-- The architecture can evolve from MBA → Apriori → collaborative filtering without structural rewrites
+System design goals:
+
+- Recommendation logic is isolated and testable
+- Data layer supports database and fallback modes
+- Architecture supports future upgrade to more advanced algorithms
 
 ---
 
 ## Live Demo
 
-| Surface | URL |
-|---|---|
-| Web App | `https://your-deployment-url.vercel.app` |
-| API | `https://your-api-url.railway.app` |
-| API Health | `GET /health` |
-| Products | `GET /products` |
-| Recommendations | `GET /recommendations?item=Tea+Powder` |
+| Surface         | URL                                                                                                                        |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Web App         | [https://blinkit-clone-web.vercel.app](https://blinkit-clone-web.vercel.app)                                               |
+| API             | [https://linkitlone-ial073362-m4hm7zfo.leapcell.dev](https://linkitlone-ial073362-m4hm7zfo.leapcell.dev)                   |
+| Health          | [GET](https://linkitlone-ial073362-m4hm7zfo.leapcell.dev/health) /health                                                   |
+| Products        | [GET](https://linkitlone-ial073362-m4hm7zfo.leapcell.dev/products) /products                                               |
+| Recommendations | [GET](https://linkitlone-ial073362-m4hm7zfo.leapcell.dev/recommendations?item=Tea+Powder) /recommendations?item=Tea+Powder |
 
 ---
 
 ## Key Features
 
-| Feature | Description |
-|---|---|
-| **Product Listing** | 30 grocery products served from Supabase PostgreSQL |
-| **Category UI** | Horizontal scroll carousels with Blinkit-style prev/next navigation |
-| **Product Detail Page** | Full product view with unit selection and cross-sell carousels |
-| **Frequently Bought Together** | Triggered on "Add to Cart" — surfaces top 3 co-purchased items with confidence scores |
-| **Smart Modal Trigger** | Anti-spam cooldown (30s), high-confidence threshold filter — modal only fires when meaningful |
-| **Supabase Integration** | Live PostgreSQL queries with graceful in-memory fallback if DB is unavailable |
-| **Cart State** | Client-side observable store with real-time badge updates |
+- Product listing from Supabase
+- Horizontal scroll UI with next and previous navigation
+- Product detail page with recommendation
+- Frequently Bought Together logic (top 3 items)
+- Confidence-based filtering
+- Supabase integration with fallback
+- Lightweight cart state
 
 ---
 
 ## Tech Stack
 
-### Frontend — `apps/web`
-- **Next.js 16** (App Router, Turbopack)
-- **Tailwind CSS v4**
-- **Plus Jakarta Sans** (closest match to Blinkit's proprietary Gilroy typeface)
-- Custom observable cart store (no external state library)
+Frontend:
 
-### Backend — `apps/api`
-- **NestJS** (modular, dependency-injected)
-- **TypeScript** throughout
-- Stateless REST API
+- Next.js
+- Tailwind CSS
 
-### Database
-- **Supabase** (hosted PostgreSQL)
-- `products` table — 30 products
-- `orders` table — 1,000 seeded orders with controlled co-occurrence patterns
+Backend:
 
-### Infrastructure
-- **Turborepo** monorepo with shared `packages/types`, `packages/utils`
-- Separation of Concern: Controller → Service → Repository
-- Environment-based Supabase toggle with in-memory fallback
+- NestJS
+- TypeScript
+
+Database:
+
+- Supabase (PostgreSQL)
+
+Architecture:
+
+- Monorepo (Turborepo)
+- Separation of Concern
+- Shared packages
 
 ---
 
 ## Architecture Overview
 
-```
-BlinkitClone/
-├── apps/
-│   ├── web/          # Next.js frontend
-│   └── api/          # NestJS backend
-└── packages/
-    ├── types/        # Shared TypeScript interfaces (Product, Order, Recommendation)
-    ├── utils/        # Shared utilities (formatPrice, generateOrders seed)
-    └── ui/           # Shared component stubs
-```
+apps/
 
-### Request Flow
+- web
+- api
 
-```
-User (Browser)
-  │
-  ├─► GET /products          → ProductsController
-  │                              └─► ProductsService
-  │                                    └─► ProductsRepository → Supabase / in-memory fallback
-  │
-  └─► GET /recommendations?item=Tea+Powder
-                             → RecommendationsController
-                                 └─► RecommendationsService    ← business logic lives here
-                                       └─► RecommendationsRepository
-                                             └─► OrdersRepository → Supabase / in-memory fallback
-```
+packages/
 
-**Key design decision:** The `RecommendationsService` only knows about an `Order[]` interface. It does not import from Supabase directly. This means the data source (DB, cache, file, mock) can be swapped without touching the recommendation logic.
+- types
+- utils
+
+Flow:
+
+User → Frontend → API → Service → Repository → Database
+
+Key decision:
+
+Recommendation logic only depends on Order[].
+It does not depend on Supabase directly.
 
 ---
 
 ## Recommendation Logic
 
-### Approach: Market Basket Analysis
+Approach: Market Basket Analysis
 
-MBA is the right first choice here. It is:
-- **Interpretable** — product managers can understand and tune it
-- **Fast** — O(N×M) where N = matching orders, M = avg items per order
-- **No training required** — works immediately on any dataset
-- **Baseline before ML** — establishes a measurable accuracy floor
+Steps:
 
-### Algorithm (Step-by-Step)
-
-```
-Input: item = "Tea Powder"
-
-Step 1 — Filter
-  Find all orders where items[] contains "Tea Powder"
-  → e.g., 420 out of 1,000 orders
-
-Step 2 — Count Co-occurrence
-  For each of those 420 orders, tally every *other* item:
-  { Sugar: 327, Milk: 274, Biscuits: 218, Coffee: 101, ... }
-
-Step 3 — Compute Confidence Score
-  score = co_occurrence_count / total_matching_orders
-  Sugar → 327 / 420 = 0.78
-  Milk  → 274 / 420 = 0.65
-  Biscuits → 218 / 420 = 0.52
-
-Step 4 — Rank and Return Top 3
-  [
-    { name: "Sugar",    score: 0.78 },
-    { name: "Milk",     score: 0.65 },
-    { name: "Biscuits", score: 0.52 }
-  ]
-```
-
-### Seed Data Design
-
-Orders are not random. They are generated with **controlled co-occurrence patterns** using a deterministic seed (Mulberry32 PRNG), ensuring:
-- Tea Powder → Sugar (0.78), Milk (0.65), Biscuits (0.52)
-- Coffee → Milk (0.72), Sugar (0.68), Cream (0.45)
-- Bread → Butter (0.75), Jam (0.60), Eggs (0.48)
-- Rice → Dal (0.70), Cooking Oil (0.55), Onions (0.50)
-
-The same seed always produces the same dataset — making results reproducible and testable.
+1. Filter orders containing item
+2. Count co-occurring items
+3. Calculate score
+4. Sort and return top 3
 
 ---
 
-## Scalability Considerations
+## Why Not Apriori algorithm
 
-The current implementation is designed to be production-replaceable, not just demo-ready.
+Apriori was not used because:
 
-### At 10K orders (current design)
-- In-process computation per request: ~5ms
-- Supabase query with `@>` array containment operator
-- Response time target: < 200ms ✓
+- Requires multiple passes over dataset
+- High computational cost
+- Not necessary for current dataset size
 
-### At 1M orders (next step)
-```
-Problem: Querying 1M orders on every recommendation request = unacceptable
-Solution: Precompute co-occurrence matrix at write-time
+Decision:
 
-Architecture upgrade:
-  Order Created → Event Queue (BullMQ / SQS)
-                    └─► Worker: update co_occurrence table
-                                  └─► Cache invalidation (Redis)
+Use frequency-based approach as baseline.
+System is designed to allow replacement later.
 
-GET /recommendations → Redis HIT (< 5ms) → return
-                     → Redis MISS → query co_occurrence table → re-cache
-```
+---
 
-### At 10M orders (ML-ready)
-- Replace MBA with Apriori or FP-Growth on Spark/BigQuery
-- Serve recommendations from a precomputed similarity table
-- A/B test MBA vs ML side-by-side on click-through rate
+## Performance
 
-### Database Indexing
-```sql
--- Required index for current array containment query
-CREATE INDEX idx_orders_items ON orders USING GIN (items);
-```
-Without this GIN index, PostgreSQL performs a full sequential scan on every recommendation request.
+Complexity:
 
-### API Caching Strategy
-```
-Layer 1: In-process Map<itemName, Recommendation[]> with TTL
-Layer 2: Redis with 5-minute expiry
-Layer 3: Supabase query (fallback only on cache miss)
-```
+O(N × M)
+
+- N = matching orders
+- M = items per order
+
+Result:
+
+- ~3–8ms computation
+- <200ms response
+
+---
+
+## Optimization
+
+- In-memory caching
+- Avoid recomputation
+- Dataset reuse
+
+---
+
+## Scalability
+
+Future approach:
+
+- Precompute co-occurrence
+- Use Redis cache
+- Background jobs for updates
 
 ---
 
 ## Edge Case Handling
 
-| Scenario | Handling |
-|---|---|
-| Item not in any order | Returns `[]` — frontend renders nothing, no error thrown |
-| Item in only 1 order | Score = 1.0 for all co-items, but dataset is sparse — low confidence threshold filter prevents misleading recommendations |
-| Duplicate items in an order | `Set<string>` used during co-occurrence counting — duplicates ignored |
-| Case mismatch (`"tea powder"` vs `"Tea Powder"`) | API falls back to in-memory search with `.toLowerCase()` comparison if Supabase returns 0 results |
-| Supabase unreachable | `isConnected()` guard — falls back to `orders.json` without surfacing an error to the user |
-| Modal spam | 30-second cooldown enforced client-side via `Date.now()` timestamp ref |
+- Item not found → return empty
+- Single-item orders ignored
+- Duplicate items removed
+- Case normalized
+- DB failure → fallback to memory
 
 ---
 
 ## Setup Instructions
 
-### Prerequisites
-- Node.js ≥ 20
-- npm ≥ 10
-- A Supabase project (or skip — the app falls back to local seed data)
+### Install
 
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/your-username/BlinkitClone.git
-cd BlinkitClone
-```
-
-### 2. Install dependencies
-
-```bash
+git clone <repo>
+cd project
 npm install
-```
 
-### 3. Configure environment
+---
 
-```bash
+### Environment
+
 cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env.local
-```
 
-Edit `apps/api/.env`:
-```env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_KEY=your-service-role-key
-PORT=3001
-```
+---
 
-> If you skip Supabase config, the app runs fully on local seed data — no account required.
+### Run
 
-### 4. (Optional) Seed the database
-
-Run the SQL script in your Supabase SQL editor:
-
-```
-apps/api/src/database/seed-orders.sql
-```
-
-### 5. Start development servers
-
-```bash
 npm run dev
-```
-
-| Service | URL |
-|---|---|
-| Frontend (Next.js) | http://localhost:3000 |
-| Backend (NestJS) | http://localhost:3001 |
-
-### 6. If ports are already in use
-
-```bash
-npm run kill-ports
-npm run dev
-```
 
 ---
 
-## Docker Setup
+### Access
 
-### Local — run both services with Docker Compose
-
-```bash
-# 1. Copy and configure env files
-cp apps/api/.env.example apps/api/.env
-# Edit apps/api/.env with your Supabase credentials
-
-# 2. Build and start both containers
-docker-compose up --build
-
-# 3. Access the services
-# → Web:  http://localhost:3000
-# → API:  http://localhost:3001
-# → Health: http://localhost:3001/health
-```
-
-> **Note:** The first build takes 2–4 minutes (installs deps, compiles TS, builds Next.js).
-> Subsequent builds use Docker layer cache and are significantly faster.
-
-To stop:
-```bash
-docker-compose down
-```
+- Web: [http://localhost:3000](http://localhost:3000)
+- API: [http://localhost:3001](http://localhost:3001)
 
 ---
 
-## Sumopod Deployment Guide
-
-Sumopod runs each container as an independent service. Deploy the API and Web as two separate containers.
-
-### Architecture on Sumopod
-
-```
-Internet
-  │
-  ├─► [web-service]  (port 3000) ─── NEXT_PUBLIC_API_URL ──► [api-service] (port 3001)
-  │        Next.js                                                   NestJS
-  │
-  └─► [api-service]  (port 3001) ─── SUPABASE_SERVICE_KEY ──► Supabase (external)
-```
+# Deployment (Leapcell + Vercel)
 
 ---
 
-### Step 1 — Deploy the API Service
+## Backend Deployment (Leapcell)
 
-**Build context:** monorepo root  
-**Dockerfile:** `apps/api/Dockerfile`  
-**Port:** `3001`
+Platform: Leapcell
 
-**Environment variables to set in Sumopod dashboard:**
+### Build Command
 
-| Variable | Value |
-|---|---|
-| `NODE_ENV` | `production` |
-| `PORT` | `3001` |
-| `SUPABASE_URL` | `https://your-project.supabase.co` |
-| `SUPABASE_SERVICE_KEY` | `your-service-role-key` |
+npm install &&
+npm run build --workspace=@blinkit/types &&
+npm.run build --workspace=@blinkit/utils &&
+cd apps/api && npm run build
 
-After deploying, note your API's public URL (e.g. `https://api.yourdomain.sumopod.com`).  
-Verify it is live: `GET https://api.yourdomain.sumopod.com/health` → `{"status":"ok"}`
+### Start Command
+
+node apps/api/dist/main.js
 
 ---
 
-### Step 2 — Deploy the Web Service
+### Environment Variables (Leapcell)
 
-**Build context:** monorepo root  
-**Dockerfile:** `apps/web/Dockerfile`  
-**Port:** `3000`
-
-> **Critical:** `NEXT_PUBLIC_API_URL` is baked into the JavaScript bundle at **build time**, not runtime.  
-> You must pass it as a **build argument** — not just an environment variable.
-
-In Sumopod, set the **build argument**:
-
-| Build Arg | Value |
-|---|---|
-| `NEXT_PUBLIC_API_URL` | `https://api.yourdomain.sumopod.com` |
-
-**Runtime environment variables:**
-
-| Variable | Value |
-|---|---|
-| `NODE_ENV` | `production` |
-| `PORT` | `3000` |
-| `HOSTNAME` | `0.0.0.0` |
+| Variable             | Value                                                                |
+| -------------------- | -------------------------------------------------------------------- |
+| PORT                 | 3001                                                                 |
+| SUPABASE_URL         | [https://your-project.supabase.co](https://your-project.supabase.co) |
+| SUPABASE_SERVICE_KEY | your-secret-key                                                      |
 
 ---
 
-### Step 3 — Verify deployment
+### Health Check
 
-```bash
-# API health check
-curl https://api.yourdomain.sumopod.com/health
-# → {"status":"ok","timestamp":"..."}
+[https://your-api.leapcell.dev/health](https://your-api.leapcell.dev/health)
 
-# Products endpoint
-curl https://api.yourdomain.sumopod.com/products
-# → [{"id":"p001","name":"Tea Powder",...}]
+---
 
-# Recommendation
-curl "https://api.yourdomain.sumopod.com/recommendations?item=Tea+Powder"
-# → {"item":"Tea Powder","recommendations":[...]}
+## Frontend Deployment (Vercel)
 
-# Frontend
-open https://web.yourdomain.sumopod.com
+Platform: Vercel
+
+### Settings
+
+- Root Directory: project root
+- Build Command:
+  npx turbo build --filter=@blinkit/web
+- Output Directory:
+  apps/web/.next
+
+---
+
+### Environment Variables (Vercel)
+
+| Variable            | Value                                                          |
+| ------------------- | -------------------------------------------------------------- |
+| NEXT_PUBLIC_API_URL | [https://your-api.leapcell.dev](https://your-api.leapcell.dev) |
+
+---
+
+## CORS Configuration (CRITICAL)
+
+File: apps/api/src/main.ts
+
+```ts
+app.enableCors({
+  origin: ['http://localhost:3000', 'https://your-vercel-url.vercel.app'],
+  credentials: true,
+});
 ```
 
+Tanpa ini, frontend tidak bisa akses API.
+
 ---
 
-### Sumopod Deployment — Key Rules
+## Verification
 
-| Rule | Reason |
-|---|---|
-| Do NOT use `docker-compose` on Sumopod | Compose is for local only; Sumopod manages each service independently |
-| Pass `NEXT_PUBLIC_API_URL` as a build ARG | It is embedded in JS at build time — runtime env vars cannot override it |
-| Set `HOSTNAME=0.0.0.0` on web service | Without it, Next.js binds to `127.0.0.1` and is unreachable from outside the container |
-| Deploy API first | Web service needs the API URL before its image is built |
-| `SUPABASE_SERVICE_KEY` goes on API only | Never expose service keys in the frontend container |
+Check API:
+
+- /health
+- /products
+- /recommendations
+
+Check browser:
+
+- No CORS error
+- Data loaded successfully
 
 ---
 
 ## Project Structure
 
-```
-BlinkitClone/
-│
-├── apps/
-│   ├── api/                        # NestJS Backend
-│   │   └── src/
-│   │       ├── products/           # Products module (Controller → Service → Repository)
-│   │       ├── orders/             # Orders repository (Supabase + fallback)
-│   │       ├── recommendations/    # MBA engine (Controller → Service → Repository)
-│   │       ├── supabase/           # Supabase client module
-│   │       ├── data/               # Seed data (orders.json, products.ts)
-│   │       └── database/           # SQL migration & seed scripts
-│   │
-│   └── web/                        # Next.js Frontend
-│       └── src/
-│           ├── app/                # App Router pages (/, /product/[id])
-│           ├── components/         # Navbar, Hero, CategorySection, ProductCarousel, ProductCard, RecommendationModal, Footer
-│           ├── lib/                # API client (fetchProducts, fetchRecommendations)
-│           └── store/              # Observable cart store
-│
-└── packages/
-    ├── types/                      # Shared: Product, Order, Recommendation, RecommendationResponse
-    ├── utils/                      # Shared: formatPrice, generateOrders (deterministic seed)
-    └── ui/                         # Shared component stubs
-```
+apps/
+
+- api
+- web
+
+packages/
+
+- types
+- utils
 
 ---
 
-## API Reference
+## API
 
-### `GET /products`
+GET /products
 
-Returns all 30 products from Supabase (or in-memory fallback).
+GET /recommendations?item=Tea Powder
 
-```json
-[
-  { "id": "p001", "name": "Tea Powder", "price": 120, "image_url": "/products/tea-powder.webp" },
-  ...
-]
-```
+GET /health
 
-### `GET /recommendations?item=Tea+Powder`
+---
 
-Runs Market Basket Analysis for the given item.
+## Trade-offs
 
-```json
-{
-  "item": "Tea Powder",
-  "recommendations": [
-    { "name": "Sugar",    "score": 0.78 },
-    { "name": "Milk",     "score": 0.65 },
-    { "name": "Biscuits", "score": 0.52 }
-  ]
-}
-```
-
-**Error cases:**
-- Missing `item` param → `400 Bad Request`
-- Item not found in orders → `200 OK` with `recommendations: []`
-
-### `GET /health`
-
-```json
-{ "status": "ok", "timestamp": "2026-05-05T16:00:00.000Z" }
-```
+- MBA for simplicity and speed
+- No Apriori to avoid complexity
+- No ML due to dataset size
+- REST for simplicity
 
 ---
 
 ## Future Improvements
 
-### Short Term
-- [ ] **Redis caching layer** — cache recommendation results with 5-minute TTL, keyed by item name
-- [ ] **GIN index** on `orders.items` — required for production-scale Supabase queries
-- [ ] **Confidence threshold config** — make the 0.5 score floor configurable via env
-
-### Medium Term
-- [ ] **Apriori algorithm** — replace co-occurrence counting with proper frequent itemset mining for more accurate lift scores
-- [ ] **Real-time order ingestion** — BullMQ job queue to update co-occurrence matrix asynchronously when new orders are placed
-- [ ] **Search functionality** — fuzzy search over product catalog
-
-### Long Term
-- [ ] **Collaborative filtering** — user-level personalization based on purchase history
-- [ ] **ML pipeline** — train on real order data with A/B testing framework to compare models by click-through rate
-- [ ] **Multi-warehouse routing** — pin recommendations to items available in the user's nearest dark store
+- Redis caching
+- Apriori algorithm
+- Background jobs
+- ML recommendation
 
 ---
 
 ## Author Note
 
-This project was built as a focused engineering exercise to demonstrate production thinking on a constrained problem.
+This project focuses on engineering decisions.
 
-The emphasis was on **decision quality, not feature count**:
+- Logic is isolated
+- System is scalable
+- Failures handled gracefully
 
-- Why MBA and not a simpler "customers also bought" query? Because MBA produces interpretable confidence scores that can be thresholded, audited, and eventually replaced by a better model without changing the API contract.
-- Why a monorepo with shared types? Because at the first moment a mobile app or second frontend is needed, the types don't drift.
-- Why a fallback to in-memory data? Because a recommendation system that goes dark when the database has a blip is worse than no recommendation system at all.
-
-The architecture was designed so that the hard part — the recommendation logic — is behind an interface. Everything else is plumbing.
+Goal is not feature count, but system quality.
 
 ---
 
 ## License
 
-MIT — built for demonstration purposes.
+MIT

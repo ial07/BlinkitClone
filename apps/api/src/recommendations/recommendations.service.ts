@@ -103,8 +103,8 @@ export class RecommendationsService implements OnModuleInit {
       const cooccurrenceCount = new Map<string, number>();
 
       for (const order of matchingOrders) {
-        for (const other of order.items) {
-          const otherLower = other.toLowerCase().trim();
+        const uniqueItems = new Set(order.items.map((i) => i.toLowerCase().trim()));
+        for (const otherLower of uniqueItems) {
           if (otherLower !== item) {
             cooccurrenceCount.set(
               otherLower,
@@ -141,8 +141,8 @@ export class RecommendationsService implements OnModuleInit {
     const cooccurrenceCount = new Map<string, number>();
 
     for (const order of matchingOrders) {
-      for (const item of order.items) {
-        const normalized = item.toLowerCase().trim();
+      const uniqueItems = new Set(order.items.map((i) => i.toLowerCase().trim()));
+      for (const normalized of uniqueItems) {
         if (normalized !== lowerInput) {
           cooccurrenceCount.set(
             normalized,
