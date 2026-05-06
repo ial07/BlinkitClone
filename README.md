@@ -219,6 +219,7 @@ node apps/api/dist/main.js
 | PORT                 | 3001                                                                 |
 | SUPABASE_URL         | [https://your-project.supabase.co](https://your-project.supabase.co) |
 | SUPABASE_SERVICE_KEY | your-secret-key                                                      |
+| CORS_ORIGIN          | https://your-web-url                                                 |
 
 ---
 
