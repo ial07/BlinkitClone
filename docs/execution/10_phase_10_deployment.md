@@ -1,274 +1,109 @@
-# Phase 10: Deployment (Sumopod Optimized)
+# Phase 10: Deployment (Leapcell & Vercel Optimized)
 
 ## Objective
 
-Prepare the application for deployment using Docker with a structure optimized for container-based platforms like Sumopod.
+Deploy a full-stack monorepo with a NestJS backend on Leapcell and a Next.js frontend on Vercel, ensuring seamless communication via CORS and environment variables.
 
 ---
 
 ## Scope
 
-- Dockerfile for NestJS backend (optimized)
-- Dockerfile for Next.js frontend (standalone mode)
-- Docker Compose for local development only
-- Environment variable management
-- Sumopod deployment guide (separate services)
-- Health check implementation
+- **Backend**: NestJS on Leapcell (Containerized).
+- **Frontend**: Next.js on Vercel (Edge/Serverless).
+- **Shared Packages**: Handling `@blinkit/types` and `@blinkit/utils` in a monorepo environment.
+- **Cross-Origin**: CORS configuration for secure cross-domain communication.
 
 ---
 
 ## Tasks
 
----
+### 10.1 Backend Deployment (Leapcell)
 
-### 10.1 Backend Dockerfile (Production Ready)
+**Platform**: Leapcell
+**Build Command**:
 
-Location:
-`apps/api/Dockerfile`
+```bash
+npm install && \
+npm run build --workspace=@blinkit/types && \
+npm run build --workspace=@blinkit/utils && \
+cd apps/api && npm run build
+```
 
-Requirements:
+**Start Command**: `node apps/api/dist/main.js`
 
-- Multi-stage build:
-  - Builder stage (install + build)
-  - Production stage (lightweight)
+**Configuration**:
 
-- Use:
-  - node:20-alpine
-
-- Only install production dependencies in final stage
-
-- Expose:
-  - PORT 3001
-
-- Add health endpoint:
-  - GET /health
-
-- Optimize:
-  - Small image size
-  - Fast startup
+- Ensure `SUPABASE_URL` starts with `https://` and has no trailing spaces.
+- Expose `PORT` via environment variables (default 3001).
 
 ---
 
-### 10.2 Frontend Dockerfile (Next.js Standalone)
+### 10.2 Frontend Deployment (Vercel)
 
-Location:
-`apps/web/Dockerfile`
+**Platform**: Vercel
+**Root Directory**: `.` (Project Root)
+**Build Command**: `npx turbo build --filter=@blinkit/web`
+**Output Directory**: `apps/web/.next`
 
-Requirements:
+**Monorepo Strategy**:
 
-- Use Next.js standalone output:
-  - output: "standalone"
-
-- Multi-stage build
-
-- Copy only:
-  - .next/standalone
-  - .next/static
-  - public
-
-- Expose:
-  - PORT 3000
-
-- Ensure:
-  - Minimal image size
-  - No dev dependencies
+- Vercel must have access to the root `node_modules` and the `packages/` directory to resolve internal workspace dependencies.
 
 ---
 
-### 10.3 Docker Compose (LOCAL ONLY)
+### 10.3 CORS Configuration (Critical)
 
-File:
-`docker-compose.yml`
+The backend must explicitly allow the Vercel domain to prevent "Failed to fetch" errors.
 
-Purpose:
+**File**: `apps/api/src/main.ts`
 
-- Local development ONLY
-- NOT used in Sumopod production
-
-Services:
-
-- api
-- web
-
-Rules:
-
-- No database container (Supabase is external)
-- Use internal networking:
-  - api:3001
-
-Example:
-
-```yaml
-services:
-  api:
-    build: ./apps/api
-    ports:
-      - '3001:3001'
-    env_file:
-      - ./apps/api/.env
-
-  web:
-    build: ./apps/web
-    ports:
-      - '3000:3000'
-    depends_on:
-      - api
-    env_file:
-      - ./apps/web/.env
+```typescript
+app.enableCors({
+  origin: [
+    'http://localhost:3000',
+    'https://blinkit-clone-web.vercel.app', // Your production Vercel URL
+  ],
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+});
 ```
 
 ---
 
-### 10.4 Environment Configuration
+### 10.4 Environment Variable Management
 
-Create:
+#### Backend (Leapcell Dashboard)
 
-- `apps/api/.env.example`
-- `apps/web/.env.example`
+- `PORT`: 3001
+- `SUPABASE_URL`: `[https://your-project.supabase.co](https://your-project.supabase.co)`
+- `SUPABASE_SERVICE_KEY`: `your-secret-key`
 
----
+#### Frontend (Vercel Dashboard)
 
-#### Backend (.env)
-
-```
-PORT=3001
-SUPABASE_URL=
-SUPABASE_KEY=
-```
+- `NEXT_PUBLIC_API_URL`: `[https://your-api.leapcell.dev](https://your-api.leapcell.dev)`
 
 ---
 
-#### Frontend (.env)
+### 10.5 Health Check & Verification
 
-```
-NEXT_PUBLIC_API_URL=http://localhost:3001
-```
-
----
-
-IMPORTANT:
-
-- NEVER expose Supabase service key in frontend
-- Use only public-safe variables in Next.js
-
----
-
-### 10.5 Health Check Endpoint
-
-Backend must provide:
-
-```
-GET /health
-```
-
-Response:
-
-```json
-{
-  "status": "ok"
-}
-```
-
----
-
-### 10.6 Sumopod Deployment Strategy (CRITICAL)
-
-Deployment model:
-
-Deploy as **2 separate services**:
-
-1. api-service
-2. web-service
-
----
-
-#### API Service
-
-- Build from:
-  `apps/api/Dockerfile`
-
-- Port:
-  3001
-
-- Env:
-  - SUPABASE_URL
-  - SUPABASE_KEY
-
----
-
-#### Web Service
-
-- Build from:
-  `apps/web/Dockerfile`
-
-- Port:
-  3000
-
-- Env:
-  - NEXT_PUBLIC_API_URL=[https://your-api-url](https://your-api-url)
-
----
-
-IMPORTANT:
-
-- Do NOT use docker-compose in Sumopod
-- Each service runs independently
-
----
-
-### 10.7 README Update
-
-Add section:
-
-#### Docker (Local)
-
-```
-docker-compose up --build
-```
-
-Access:
-
-- Web: [http://localhost:3000](http://localhost:3000)
-- API: [http://localhost:3001](http://localhost:3001)
-
----
-
-#### Deployment (Sumopod)
-
-Steps:
-
-1. Build container
-2. Configure environment variables
-3. Deploy API service
-4. Deploy Web service
-5. Connect frontend to API URL
-
----
-
-## Expected Output
-
-- Dockerized backend & frontend
-- Local environment works via docker-compose
-- Ready to deploy on Sumopod without changes
+- **Liveness Check**: Verify backend status at `[https://your-api.leapcell.dev/health](https://your-api.leapcell.dev/health)`.
+- **Database Check**: Verify data fetching at `[https://your-api.leapcell.dev/products](https://your-api.leapcell.dev/products)`.
+- **CORS Verification**: Ensure the `Access-Control-Allow-Origin` header in the browser's Network tab matches your Vercel URL.
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] docker-compose up works locally
-- [ ] API accessible at localhost:3001
-- [ ] Web accessible at localhost:3000
-- [ ] Health check endpoint works
-- [ ] Env variables properly externalized
-- [ ] Deployment guide clear for Sumopod
-- [ ] No secrets leaked to frontend
+- [ ] Backend builds successfully on Leapcell using workspace commands.
+- [ ] Frontend builds on Vercel with Turbo and resolves shared packages.
+- [ ] API is accessible via the Leapcell assigned domain.
+- [ ] Frontend successfully fetches data from the Leapcell API without CORS errors.
+- [ ] Environment variables are properly hidden and not leaked to the client (except `NEXT_PUBLIC`).
 
 ---
 
 ## Out of Scope
 
-- CI/CD pipeline
-- Kubernetes
-- Domain & SSL
-- Monitoring tools
-- Advanced scaling setup
+- Local Docker Compose (redundant with current PaaS setup).
+- Self-managed VPS infrastructure.
+- CI/CD pipelines outside of GitHub-to-PaaS integration.

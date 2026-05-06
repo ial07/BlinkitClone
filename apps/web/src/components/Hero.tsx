@@ -12,17 +12,17 @@ export function Hero() {
         <div className="absolute right-1/3 top-1/3 h-32 w-32 rounded-full bg-blue-100/40 blur-2xl" />
 
         {/* Content */}
-        <div className="relative z-10 flex w-full items-center justify-between px-8 py-8 sm:px-12">
+        <div className="relative z-10 flex w-full items-center justify-between px-5 py-6 sm:px-12 sm:py-8">
           <div className="max-w-lg">
-            <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-[#0C831F]/10 px-3 py-1 text-xs font-bold text-[#0C831F]">
+            <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-[#0C831F]/10 px-3 py-1 text-[10px] sm:text-xs font-bold text-[#0C831F]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#0C831F] animate-pulse-dot" />
               Now delivering in 8 minutes
             </div>
-            <h1 className="mb-3 text-3xl font-black tracking-tight text-zinc-900 sm:text-5xl">
+            <h1 className="mb-3 text-[26px] font-black tracking-tight text-zinc-900 sm:text-4xl lg:text-5xl">
               Your daily needs,{" "}
               <span className="text-[#0C831F]">super fast</span>
             </h1>
-            <p className="text-base font-medium text-zinc-600 sm:text-lg">
+            <p className="text-sm font-medium text-zinc-600 sm:text-lg">
               Get fresh groceries, snacks & more delivered to your doorstep in
               minutes.
             </p>

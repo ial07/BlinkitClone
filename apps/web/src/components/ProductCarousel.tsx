@@ -59,9 +59,11 @@ export function ProductCarousel({ title, products, onAdd }: ProductCarouselProps
       }}
     >
       {/* ── Section Header (title + see all only) ── */}
-      <div className="mb-4 flex items-center justify-between px-4">
-        <h2 className="text-[18px] font-bold text-zinc-900 tracking-tight">{title}</h2>
-        <button className="text-sm font-semibold text-[#0C831F] transition-colors hover:text-[#0a6e19]">
+      <div className="mb-4 flex items-center justify-between gap-4 px-4 md:px-10 min-w-0">
+        <h2 className="flex-1 min-w-0 truncate text-[18px] font-bold tracking-tight text-zinc-900">
+          {title}
+        </h2>
+        <button className="shrink-0 text-sm font-semibold text-[#0C831F] transition-colors hover:text-[#0a6e19]">
           see all
         </button>
       </div>
@@ -75,8 +77,9 @@ export function ProductCarousel({ title, products, onAdd }: ProductCarouselProps
             onClick={() => scrollBy('left')}
             aria-label="Scroll left"
             className="
-              absolute left-1 top-1/2 z-20 -translate-y-1/2
-              flex h-9 w-9 items-center justify-center
+              hidden md:flex
+              absolute left-0 top-1/2 z-20 -translate-y-1/2
+              h-10 w-10 items-center justify-center
               rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.18)]
               border border-zinc-100
               text-zinc-600
@@ -85,7 +88,7 @@ export function ProductCarousel({ title, products, onAdd }: ProductCarouselProps
               active:scale-95
             "
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
@@ -97,8 +100,9 @@ export function ProductCarousel({ title, products, onAdd }: ProductCarouselProps
             onClick={() => scrollBy('right')}
             aria-label="Scroll right"
             className="
-              absolute right-1 top-1/2 z-20 -translate-y-1/2
-              flex h-9 w-9 items-center justify-center
+              hidden md:flex
+              absolute right-0 top-1/2 z-20 -translate-y-1/2
+              h-10 w-10 items-center justify-center
               rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.18)]
               border border-zinc-100
               text-zinc-600
@@ -107,25 +111,18 @@ export function ProductCarousel({ title, products, onAdd }: ProductCarouselProps
               active:scale-95
             "
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="9 18 15 12 9 6" />
             </svg>
           </button>
         )}
 
-        {/* ── Left fade edge (subtle) ── */}
-        <div
-          className={`pointer-events-none absolute left-0 top-0 bottom-4 z-10 w-10 bg-gradient-to-r from-[#F4F6F9] to-transparent transition-opacity duration-200 ${canScrollLeft ? 'opacity-100' : 'opacity-0'}`}
-        />
-        {/* ── Right fade edge ── */}
-        <div
-          className={`pointer-events-none absolute right-0 top-0 bottom-4 z-10 w-10 bg-gradient-to-l from-[#F4F6F9] to-transparent transition-opacity duration-200 ${canScrollRight ? 'opacity-100' : 'opacity-0'}`}
-        />
+
 
         {/* ── Scrollable row ── */}
         <div
           ref={scrollRef}
-          className="flex gap-3 overflow-x-auto px-4 pb-4 scrollbar-hide snap-x snap-mandatory"
+          className="flex gap-4 overflow-x-auto px-4 md:px-10 pb-4 scrollbar-hide snap-x snap-mandatory"
         >
           {products.map((product) => (
             <div key={product.id} className="snap-start shrink-0">

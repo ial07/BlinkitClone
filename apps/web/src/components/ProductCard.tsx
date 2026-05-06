@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Product } from '@blinkit/types';
 import { cartStore } from '@/store/cart';
 
@@ -47,8 +48,8 @@ export function ProductCard({ product, onAdd }: ProductCardProps) {
   };
 
   return (
-    /* Fixed width — 160px mobile, 180px sm+ */
-    <div className="group relative flex flex-col w-[160px] sm:w-[180px] overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-200 hover:shadow-lg cursor-pointer">
+    /* Fixed width — 140px mobile (fits 2 on 320px screens), 180px sm+ */
+    <Link href={`/product/${product.id}`} className="group relative flex flex-col w-[140px] xs:w-[150px] sm:w-[180px] overflow-hidden rounded-2xl border border-zinc-100 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-200 hover:shadow-lg cursor-pointer block">
 
       {/* ── Image Zone ── */}
       <div className="relative w-full aspect-square overflow-hidden bg-[#F8F8F8]">
@@ -69,21 +70,23 @@ export function ProductCard({ product, onAdd }: ProductCardProps) {
           />
         )}
 
+      </div>
+
+      {/* ── Content Zone ── */}
+      <div className="flex flex-1 flex-col px-2.5 py-2 sm:px-3 sm:py-2.5">
         {/* Delivery badge */}
-        <div className="absolute top-2 left-2 z-20 flex items-center gap-1 rounded-md bg-white/90 backdrop-blur-sm px-1.5 py-0.5 shadow-sm">
+        <div className="mb-2 flex w-fit items-center gap-1 rounded-[4px] bg-[#F4F6F9] px-1.5 py-1">
           <svg
-            width="9" height="9" viewBox="0 0 24 24" fill="none"
-            stroke="#0C831F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+            width="10" height="10" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+            className="text-zinc-700"
           >
             <circle cx="12" cy="12" r="10" />
             <polyline points="12 6 12 12 16 14" />
           </svg>
-          <span className="text-[9px] font-bold text-zinc-700 leading-none">8 MIN</span>
+          <span className="text-[9px] font-bold text-zinc-800 leading-none tracking-wide">8 MINS</span>
         </div>
-      </div>
 
-      {/* ── Content Zone ── */}
-      <div className="flex flex-1 flex-col px-3 py-2.5">
         {/* Product name — max 2 lines, consistent height */}
         <h3
           className="mb-0.5 text-[13px] font-semibold leading-[1.35] text-zinc-800"
@@ -142,6 +145,6 @@ export function ProductCard({ product, onAdd }: ProductCardProps) {
           )}
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

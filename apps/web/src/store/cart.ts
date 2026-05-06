@@ -17,6 +17,10 @@ export const cartStore = {
     return cartItems.reduce((sum, item) => sum + item.quantity, 0);
   },
 
+  getTotal(): number {
+    return cartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  },
+
   addItem(product: Product): void {
     const existing = cartItems.find((i) => i.product.id === product.id);
     if (existing) {

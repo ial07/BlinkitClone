@@ -63,10 +63,14 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
             
             {/* LEFT: Image & Thumbnails */}
             <div className="flex flex-col items-center">
-              <div className="relative flex aspect-square w-full max-w-md items-center justify-center rounded-2xl border border-zinc-100 bg-[#F8F8F8]">
-                <div className="text-8xl font-black text-zinc-300">
-                  {product.name.charAt(0)}
-                </div>
+              <div className="relative flex aspect-square w-full max-w-md items-center justify-center overflow-hidden rounded-2xl border border-zinc-100 bg-white">
+                {product.image_url ? (
+                  <img src={product.image_url} alt={product.name} className="h-full w-full object-contain p-8" />
+                ) : (
+                  <div className="text-8xl font-black text-zinc-300">
+                    {product.name.charAt(0)}
+                  </div>
+                )}
               </div>
               
               {/* Thumbnails (Mock) */}
@@ -114,52 +118,53 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
                 </div>
               </div>
 
-              <div className="mt-auto flex items-end gap-4 rounded-xl border border-zinc-100 bg-[#F8F8F8] p-4">
-                <div className="flex-1">
-                  <p className="text-xs font-medium text-zinc-500">Price</p>
-                  <p className="text-xl font-bold text-zinc-900">{formatPrice(product.price)}</p>
-                  <p className="text-[10px] text-zinc-400">(Inclusive of all taxes)</p>
+              {/* Price & Add to Cart (Match Screenshot) */}
+              <div className="mt-6 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-zinc-700 mb-0.5">1 unit</p>
+                  <p className="text-lg font-bold text-zinc-900">{formatPrice(product.price)}</p>
+                  <p className="text-[10px] text-zinc-400 mt-0.5">(Inclusive of all taxes)</p>
                 </div>
                 <button
                   onClick={() => handleAdd(product)}
-                  className="flex h-12 items-center justify-center rounded-xl bg-[#0C831F] px-8 font-bold text-white transition-colors hover:bg-[#0a6e19] active:scale-95"
+                  className="flex h-10 items-center justify-center rounded-lg bg-[#0C831F] px-6 text-sm font-bold text-white transition-colors hover:bg-[#0a6e19] active:scale-95"
                 >
-                  ADD TO CART
+                  Add to cart
                 </button>
               </div>
 
               {/* Why Shop Section */}
               <div className="mt-8 border-t border-zinc-100 pt-6">
-                <h3 className="mb-4 font-bold text-zinc-900">Why shop from blinkit clone?</h3>
-                <div className="flex flex-col gap-4">
+                <h3 className="mb-4 text-sm font-bold text-zinc-900">Why shop from blinkit?</h3>
+                <div className="flex flex-col gap-5">
                   
                   <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-500">
-                      ⏱️
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center">
+                      <img src="https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=50,metadata=none,w=90/assets/web/blinkit-promises/10_minute_delivery.png" alt="Superfast Delivery" className="h-full w-full object-contain" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-zinc-800">Superfast Delivery</p>
-                      <p className="text-xs text-zinc-500">Get your order delivered to your doorstep at the earliest from dark stores near you.</p>
+                      <p className="text-xs font-semibold text-zinc-800">Superfast Delivery</p>
+                      <p className="text-[10px] text-zinc-500 mt-0.5 leading-snug">Get your order delivered to your doorstep at the earliest from dark stores near you.</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-50 text-green-500">
-                      🏷️
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center">
+                      <img src="https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=50,metadata=none,w=90/assets/web/blinkit-promises/Best_Prices_Offers.png" alt="Best Prices & Offers" className="h-full w-full object-contain" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-zinc-800">Best Prices & Offers</p>
-                      <p className="text-xs text-zinc-500">Cheaper prices than your local supermarket, great cashback offers to top it off.</p>
+                      <p className="text-xs font-semibold text-zinc-800">Best Prices & Offers</p>
+                      <p className="text-[10px] text-zinc-500 mt-0.5 leading-snug">Cheaper prices than your local supermarket, great cashback offers to top it off.</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-50 text-orange-500">
-                      📦
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center">
+                      <img src="https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=50,metadata=none,w=90/assets/web/blinkit-promises/Wide_Assortment.png" alt="Wide Assortment" className="h-full w-full object-contain" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-zinc-800">Wide Assortment</p>
-                      <p className="text-xs text-zinc-500">Choose from 5000+ products across food, personal care, household & other categories.</p>
+                      <p className="text-xs font-semibold text-zinc-800">Wide Assortment</p>
+                      <p className="text-[10px] text-zinc-500 mt-0.5 leading-snug">Choose from 5000+ products across food, personal care, household & other categories.</p>
                     </div>
                   </div>
 
@@ -167,6 +172,22 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
               </div>
 
             </div>
+          </div>
+
+          {/* Product Details Section */}
+          <div className="mt-12 w-full max-w-md pt-2">
+            <h2 className="mb-4 text-[15px] font-bold text-zinc-900">Product Details</h2>
+            <div className="mb-4">
+              <h3 className="text-xs font-semibold text-zinc-800 mb-1">Unit</h3>
+              <p className="text-xs text-zinc-600">1 unit</p>
+            </div>
+            <div>
+              <h3 className="text-xs font-semibold text-zinc-800 mb-1">Shelf Life</h3>
+              <p className="text-xs text-zinc-600">6 months</p>
+            </div>
+            <button className="mt-4 text-xs font-bold text-[#0C831F]">
+              View more details <span className="ml-1 text-[10px]">▼</span>
+            </button>
           </div>
         </div>
 

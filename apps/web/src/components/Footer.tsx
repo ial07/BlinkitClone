@@ -4,7 +4,7 @@ export function Footer() {
   return (
     <footer className="mt-20 border-t border-zinc-200 bg-white pt-12 pb-8">
       <div className="mx-auto max-w-7xl px-4">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
           {/* Brand Column */}
           <div className="col-span-2 lg:col-span-1">
             <h3 className="mb-4 text-2xl font-black tracking-tighter text-[#F8CB46]">
