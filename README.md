@@ -260,9 +260,7 @@ app.enableCors({
   origin: ['http://localhost:3000', 'https://your-vercel-url.vercel.app'],
   credentials: true,
 });
-```
-
-Tanpa ini, frontend tidak bisa akses API.
+```   
 
 ---
 
