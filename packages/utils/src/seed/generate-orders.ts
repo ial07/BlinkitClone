@@ -73,24 +73,24 @@ const PATTERNS: CoOccurrencePattern[] = [
     anchor: 'Bread',
     pairs: [
       { name: 'Butter', probability: 0.75 },
-      { name: 'Jam', probability: 0.60 },
+      { name: 'Jam', probability: 0.6 },
       { name: 'Eggs', probability: 0.48 },
     ],
   },
   {
     anchor: 'Rice',
     pairs: [
-      { name: 'Dal', probability: 0.70 },
+      { name: 'Dal', probability: 0.7 },
       { name: 'Cooking Oil', probability: 0.55 },
-      { name: 'Onions', probability: 0.50 },
+      { name: 'Onions', probability: 0.5 },
     ],
   },
   {
     anchor: 'Maggi Noodles',
     pairs: [
-      { name: 'Eggs', probability: 0.60 },
-      { name: 'Ketchup', probability: 0.50 },
-      { name: 'Cheese', probability: 0.40 },
+      { name: 'Eggs', probability: 0.6 },
+      { name: 'Ketchup', probability: 0.5 },
+      { name: 'Cheese', probability: 0.4 },
     ],
   },
 ];
@@ -215,7 +215,7 @@ export function generateOrders(
 
   // Count unique products
   const productSet = new Set<string>();
-  orders.forEach((o) => o.items.forEach((i) => productSet.add(i)));
+  orders.forEach((o: Order) => o.items.forEach((i) => productSet.add(i)));
 
   // Order size range
   const sizes = orders.map((o) => o.items.length);
