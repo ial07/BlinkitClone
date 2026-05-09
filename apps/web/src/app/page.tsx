@@ -82,8 +82,23 @@ export default function Home() {
 
   const handleAddRecommendation = useCallback(
     (productName: string) => {
-      const product = products.find((p) => p.name === productName);
-      if (product) cartStore.addItem(product);
+      // Use case-insensitive match: the recommendation engine returns lowercase names
+      // while the product catalog may store them with different casing.
+      const normalizedTarget = productName.toLowerCase().trim();
+      const product = products.find(
+        (p) =>
+          p.name.toLowerCase().trim() === normalizedTarget ||
+          p.name.toLowerCase().trim().includes(normalizedTarget) ||
+          normalizedTarget.includes(p.name.toLowerCase().trim()),
+      );
+      if (product) {
+        cartStore.addItem(product);
+      } else {
+        console.warn(
+          `[RecommendationModal] Product not found in catalog: "${productName}". ` +
+          `Available: ${products.map((p) => p.name).join(', ')}`,
+        );
+      }
     },
     [products],
   );
